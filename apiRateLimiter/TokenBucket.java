@@ -1,3 +1,5 @@
+import java.util.Date;
+
 class Bucket{
 
 	private int maxTokens;
@@ -12,9 +14,9 @@ class Bucket{
 		this.lastTimeStamp = new Date();
 	}
 
-	public synchronized void refreshTokens(int tokens){
+	public void refreshTokens(int tokens){
 		Date currentTimeStamp = new Date();
-		long differenceInTime = currentTimeStamp - this.lastTimeStamp;
+		long differenceInTime = currentTimeStamp.getTime() - this.lastTimeStamp.getTime();
 		long differenceInSeconds = differenceInTime/1000 % 60;
 		if (differenceInSeconds >= this.timeUnit){
 			bucket = tokens;
@@ -31,10 +33,10 @@ class Bucket{
 		this.lastTimeStamp = new Date();
 	}
 
-	public synchronized void handleRequests(int requestId){
+	public void handleRequests(int requestId){
 		int availableTokens = fetchToken();
 		if (availableTokens < 1){
-			throw new RuntimeException("API Limit reached, please try in some time);
+			System.out.println("API Limit reached, please try in some time");
 		} else {
 			System.out.println("Your request " + requestId + " is successfully processed");
 		}
@@ -43,26 +45,26 @@ class Bucket{
 }
 
 class RefreshTokenThread extends Thread {
-	private TokenBucket b;
+	private Bucket b;
 	
-	RefreshTokenThread(TokenBucket b){
+	RefreshTokenThread(Bucket b){
 		this.b = b;
 	}
 
 	public void run(){
 		while(true){
-			b.addToken(1);
+			b.refreshTokens(5);
 			try{
-				Thread.sleep(60000); // thread runs every minute
+				Thread.sleep(6000); // thread runs every minute
 			} catch(Exception e){}
 		}
 	}
 }
 
 class UserThread extends Thread {
-	private TokenBucket b;
+	private Bucket b;
 
-	UserThread(TokenBucket b){
+	UserThread(Bucket b){
 		this.b = b;
 	}
 
